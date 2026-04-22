@@ -135,8 +135,20 @@ const AdminDashboard = () => {
               onChange={(e) => setCourseCode(e.target.value)} className="input" required />
             <input placeholder="Department" value={department}
               onChange={(e) => setDepartment(e.target.value)} className="input" required />
-            <input placeholder="Lecturer ID" value={lecturerId}
-              onChange={(e) => setLecturerId(e.target.value)} className="input" required />
+            <select
+  value={lecturerId}
+  onChange={(e) => setLecturerId(e.target.value)}
+  className="input"
+  required>
+  <option value="">Select a Lecturer</option>
+  {users
+    .filter(u => u.role === 'lecturer')
+    .map((lecturer) => (
+      <option key={lecturer._id} value={lecturer._id}>
+        {lecturer.fullName} — {lecturer.department}
+      </option>
+    ))}
+</select>
             <button type="submit" className="button" disabled={loading}>
               {loading ? 'Creating...' : 'Create Course'}
             </button>

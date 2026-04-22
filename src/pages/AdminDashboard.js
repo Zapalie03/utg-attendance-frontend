@@ -23,6 +23,12 @@ const AdminDashboard = () => {
   const [editDepartment, setEditDepartment] = useState('');
   const [editMatriculationNumber, setEditMatriculationNumber] = useState('');
 
+  // Edit course state
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [editCourseName, setEditCourseName] = useState('');
+  const [editCourseCode, setEditCourseCode] = useState('');
+  const [editCourseDepartment, setEditCourseDepartment] = useState('');
+
   // New course form
   const [courseName, setCourseName] = useState('');
   const [courseCode, setCourseCode] = useState('');
@@ -42,7 +48,7 @@ const AdminDashboard = () => {
     fetchUsers();
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage('');
@@ -97,6 +103,15 @@ useEffect(() => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Validate matriculation number for students
+    if (role === 'student' && !matriculationNumber) {
+      setMessageType('error');
+      setMessage('Matriculation number is required for students!');
+      setLoading(false);
+      return;
+    }
+
     try {
       await API.post('/auth/register', {
         fullName, email, password, role,
@@ -156,6 +171,43 @@ useEffect(() => {
     } catch (error) {
       setMessageType('error');
       setMessage(error.response?.data?.message || 'Error deleting user');
+    }
+  };
+
+  const handleEditCourseClick = (course) => {
+    setEditingCourse(course._id);
+    setEditCourseName(course.courseName);
+    setEditCourseCode(course.courseCode);
+    setEditCourseDepartment(course.department);
+  };
+
+  const handleEditCourseSave = async (id) => {
+    try {
+      await API.put(`/courses/${id}`, {
+        courseName: editCourseName,
+        courseCode: editCourseCode,
+        department: editCourseDepartment
+      });
+      setMessageType('success');
+      setMessage('Course updated successfully!');
+      setEditingCourse(null);
+      fetchCourses();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Error updating course');
+    }
+  };
+
+  const handleDeleteCourse = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    try {
+      await API.delete(`/courses/${id}`);
+      setMessageType('success');
+      setMessage('Course deleted successfully!');
+      fetchCourses();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Error deleting course');
     }
   };
 
@@ -237,15 +289,95 @@ useEffect(() => {
                     <th>Code</th>
                     <th>Department</th>
                     <th>Lecturer</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {courses.map((course) => (
                     <tr key={course._id}>
-                      <td>{course.courseName}</td>
-                      <td>{course.courseCode}</td>
-                      <td>{course.department}</td>
-                      <td>{course.lecturer?.fullName || 'N/A'}</td>
+                      {editingCourse === course._id ? (
+                        <>
+                          <td>
+                            <input value={editCourseName}
+                              onChange={(e) => setEditCourseName(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td>
+                            <input value={editCourseCode}
+                              onChange={(e) => setEditCourseCode(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td>
+                            <input value={editCourseDepartment}
+                              onChange={(e) => setEditCourseDepartment(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td>{course.lecturer?.fullName || 'N/A'}</td>
+                          <td style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleEditCourseSave(course._id)}
+                              style={{
+                                backgroundColor: '#28a745',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingCourse(null)}
+                              style={{
+                                backgroundColor: '#6c757d',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Cancel
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>{course.courseName}</td>
+                          <td>{course.courseCode}</td>
+                          <td>{course.department}</td>
+                          <td>{course.lecturer?.fullName || 'N/A'}</td>
+                          <td style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleEditCourseClick(course)}
+                              style={{
+                                backgroundColor: '#1a1a2e',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCourse(course._id)}
+                              style={{
+                                backgroundColor: '#e74c3c',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Delete
+                            </button>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>

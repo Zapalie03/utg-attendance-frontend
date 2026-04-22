@@ -13,12 +13,23 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('courses');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('success');
 
+  // Edit user state
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editMatriculationNumber, setEditMatriculationNumber] = useState('');
+
+  // New course form
   const [courseName, setCourseName] = useState('');
   const [courseCode, setCourseCode] = useState('');
   const [department, setDepartment] = useState('');
   const [lecturerId, setLecturerId] = useState('');
 
+  // New user form
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,6 +70,7 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       await API.post('/courses', { courseName, courseCode, department, lecturer: lecturerId });
+      setMessageType('success');
       setMessage('Course created successfully!');
       setCourseName('');
       setCourseCode('');
@@ -66,6 +78,7 @@ const AdminDashboard = () => {
       setLecturerId('');
       fetchCourses();
     } catch (error) {
+      setMessageType('error');
       setMessage(error.response?.data?.message || 'Error creating course');
     } finally {
       setLoading(false);
@@ -80,6 +93,7 @@ const AdminDashboard = () => {
         fullName, email, password, role,
         matriculationNumber, department: userDepartment
       });
+      setMessageType('success');
       setMessage('User registered successfully!');
       setFullName('');
       setEmail('');
@@ -88,9 +102,51 @@ const AdminDashboard = () => {
       setUserDepartment('');
       fetchUsers();
     } catch (error) {
+      setMessageType('error');
       setMessage(error.response?.data?.message || 'Error registering user');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditClick = (u) => {
+    setEditingUser(u._id);
+    setEditFullName(u.fullName);
+    setEditEmail(u.email);
+    setEditRole(u.role);
+    setEditDepartment(u.department);
+    setEditMatriculationNumber(u.matriculationNumber || '');
+  };
+
+  const handleEditSave = async (id) => {
+    try {
+      await API.put(`/users/${id}`, {
+        fullName: editFullName,
+        email: editEmail,
+        role: editRole,
+        department: editDepartment,
+        matriculationNumber: editMatriculationNumber
+      });
+      setMessageType('success');
+      setMessage('User updated successfully!');
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Error updating user');
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await API.delete(`/users/${id}`);
+      setMessageType('success');
+      setMessage('User deleted successfully!');
+      fetchUsers();
+    } catch (error) {
+      setMessageType('error');
+      setMessage(error.response?.data?.message || 'Error deleting user');
     }
   };
 
@@ -120,7 +176,11 @@ const AdminDashboard = () => {
       </div>
 
       {/* Message */}
-      {message && <div className="message">{message}</div>}
+      {message && (
+        <div className={messageType === 'success' ? 'message' : 'error-message'}>
+          {message}
+        </div>
+      )}
 
       {/* Courses Tab */}
       {activeTab === 'courses' && (
@@ -136,19 +196,19 @@ const AdminDashboard = () => {
             <input placeholder="Department" value={department}
               onChange={(e) => setDepartment(e.target.value)} className="input" required />
             <select
-  value={lecturerId}
-  onChange={(e) => setLecturerId(e.target.value)}
-  className="input"
-  required>
-  <option value="">Select a Lecturer</option>
-  {users
-    .filter(u => u.role === 'lecturer')
-    .map((lecturer) => (
-      <option key={lecturer._id} value={lecturer._id}>
-        {lecturer.fullName} — {lecturer.department}
-      </option>
-    ))}
-</select>
+              value={lecturerId}
+              onChange={(e) => setLecturerId(e.target.value)}
+              className="input"
+              required>
+              <option value="">Select a Lecturer</option>
+              {users
+                .filter(u => u.role === 'lecturer')
+                .map((lecturer) => (
+                  <option key={lecturer._id} value={lecturer._id}>
+                    {lecturer.fullName} — {lecturer.department}
+                  </option>
+                ))}
+            </select>
             <button type="submit" className="button" disabled={loading}>
               {loading ? 'Creating...' : 'Create Course'}
             </button>
@@ -228,15 +288,103 @@ const AdminDashboard = () => {
                     <th>Email</th>
                     <th>Role</th>
                     <th>Department</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
                     <tr key={u._id}>
-                      <td>{u.fullName}</td>
-                      <td>{u.email}</td>
-                      <td>{u.role}</td>
-                      <td>{u.department}</td>
+                      {editingUser === u._id ? (
+                        <>
+                          <td>
+                            <input value={editFullName}
+                              onChange={(e) => setEditFullName(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td>
+                            <input value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td>
+                            <select value={editRole}
+                              onChange={(e) => setEditRole(e.target.value)}
+                              className="input">
+                              <option value="student">Student</option>
+                              <option value="lecturer">Lecturer</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          <td>
+                            <input value={editDepartment}
+                              onChange={(e) => setEditDepartment(e.target.value)}
+                              className="input" />
+                          </td>
+                          <td style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleEditSave(u._id)}
+                              style={{
+                                backgroundColor: '#28a745',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingUser(null)}
+                              style={{
+                                backgroundColor: '#6c757d',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Cancel
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>{u.fullName}</td>
+                          <td>{u.email}</td>
+                          <td>{u.role}</td>
+                          <td>{u.department}</td>
+                          <td style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleEditClick(u)}
+                              style={{
+                                backgroundColor: '#1a1a2e',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u._id)}
+                              style={{
+                                backgroundColor: '#e74c3c',
+                                color: '#fff',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}>
+                              Delete
+                            </button>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>

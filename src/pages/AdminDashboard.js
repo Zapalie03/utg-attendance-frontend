@@ -42,6 +42,15 @@ const AdminDashboard = () => {
     fetchUsers();
   }, []);
 
+useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const fetchCourses = async () => {
     try {
       const response = await API.get('/courses');

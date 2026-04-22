@@ -29,7 +29,7 @@ const StudentDashboard = () => {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, scanning]);
-  
+
   const fetchMyAttendance = async () => {
     try {
       const response = await API.get('/attendance/my-attendance');
@@ -44,9 +44,9 @@ const StudentDashboard = () => {
 
     const scanner = new Html5QrcodeScanner('qr-reader', {
       fps: 10,
-      qrbox: { width: 250, height: 250 }
+      qrbox: { width: 250, height: 250 },
+      facingMode: "environment"
     });
-
     scanner.render(
       async (decodedText) => {
         scanner.clear();

@@ -42,11 +42,14 @@ const StudentDashboard = () => {
   const startScanner = () => {
     if (scannerRef.current) return;
 
-    const scanner = new Html5QrcodeScanner('qr-reader', {
+ const scanner = new Html5QrcodeScanner('qr-reader', {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      facingMode: "environment"
+      videoConstraints: {
+        facingMode: { exact: "environment" }
+      }
     });
+    
     scanner.render(
       async (decodedText) => {
         scanner.clear();

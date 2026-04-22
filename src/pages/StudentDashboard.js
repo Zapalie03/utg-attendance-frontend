@@ -27,8 +27,9 @@ const StudentDashboard = () => {
     return () => {
       stopScanner();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, scanning]);
-
+  
   const fetchMyAttendance = async () => {
     try {
       const response = await API.get('/attendance/my-attendance');

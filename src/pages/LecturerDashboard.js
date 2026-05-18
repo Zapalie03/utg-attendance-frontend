@@ -147,7 +147,7 @@ const LecturerDashboard = () => {
               <div className="qr-wrapper">
                 <QRCode
                   value={JSON.stringify({
-                    sessionId: activeSession.id,
+                    sessionToken: activeSession.sessionToken,
                     courseId: activeSession.course
                   })}
                   size={220}

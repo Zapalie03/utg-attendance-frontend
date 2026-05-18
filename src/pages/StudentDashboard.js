@@ -59,7 +59,7 @@ const StudentDashboard = () => {
         try {
           const qrData = JSON.parse(decodedText);
           const response = await API.post('/attendance', {
-            sessionId: qrData.sessionId,
+            sessionToken: qrData.sessionToken,
             courseId: qrData.courseId
           });
 
